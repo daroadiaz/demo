@@ -1,0 +1,273 @@
+{
+	"info": {
+		"_postman_id": "d1dfdb81-8c49-48df-ae3f-658064c94556",
+		"name": "Sistema Inventario - BFF",
+		"description": "Colección para probar el microservicio BFF del sistema de inventario",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "43472334"
+	},
+	"item": [
+		{
+			"name": "Productos",
+			"item": [
+				{
+					"name": "Crear Producto",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"codigo\": \"PROD001\",\n  \"nombre\": \"Laptop HP\",\n  \"descripcion\": \"Laptop HP 15 pulgadas\",\n  \"precio\": 899.99,\n  \"stock\": 50,\n  \"stockMinimo\": 10,\n  \"categoria\": \"ELECTRONICA\",\n  \"activo\": true\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/v1/productos",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"productos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Listar Productos",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/v1/productos",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"productos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Producto",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/v1/productos/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"productos",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Actualizar Producto",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"codigo\": \"PROD001\",\n  \"nombre\": \"Laptop HP Actualizada\",\n  \"descripcion\": \"Laptop HP 15 pulgadas - Nueva versión\",\n  \"precio\": 999.99,\n  \"stock\": 45,\n  \"stockMinimo\": 10,\n  \"categoria\": \"ELECTRONICA\",\n  \"activo\": true\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/v1/productos/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"productos",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Eliminar Producto",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/v1/productos/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"productos",
+								"1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Bodegas",
+			"item": [
+				{
+					"name": "Crear Bodega",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"codigo\": \"BOD001\",\n  \"nombre\": \"Bodega Central\",\n  \"direccion\": \"Av. Principal 123\",\n  \"telefono\": \"+56912345678\",\n  \"capacidadMaxima\": 10000,\n  \"espacioUtilizado\": 0,\n  \"activo\": true\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/v1/bodegas",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"bodegas"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Listar Bodegas",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/v1/bodegas",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"bodegas"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Bodega",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/v1/bodegas/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"bodegas",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Actualizar Bodega",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"codigo\": \"BOD001\",\n  \"nombre\": \"Bodega Central Actualizada\",\n  \"direccion\": \"Av. Principal 456\",\n  \"telefono\": \"+56987654321\",\n  \"capacidadMaxima\": 15000,\n  \"espacioUtilizado\": 5000,\n  \"activo\": true\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/v1/bodegas/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"bodegas",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Eliminar Bodega",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/v1/bodegas/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"bodegas",
+								"1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
