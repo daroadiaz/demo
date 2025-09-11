@@ -1,0 +1,532 @@
+-- =====================================================
+-- SCRIPT DE CREACIÓN DE BASE DE DATOS ORACLE
+-- Sistema de Inventario de Productos
+-- Versión: 1.0
+-- =====================================================
+
+-- =====================================================
+-- ELIMINACIÓN DE OBJETOS EXISTENTES (SI EXISTEN)
+-- =====================================================
+
+-- Eliminar tablas si existen
+BEGIN
+   EXECUTE IMMEDIATE 'DROP TABLE PRODUCTO CASCADE CONSTRAINTS';
+EXCEPTION
+   WHEN OTHERS THEN
+      IF SQLCODE != -942 THEN
+         RAISE;
+      END IF;
+END;
+/
+
+BEGIN
+   EXECUTE IMMEDIATE 'DROP TABLE BODEGA CASCADE CONSTRAINTS';
+EXCEPTION
+   WHEN OTHERS THEN
+      IF SQLCODE != -942 THEN
+         RAISE;
+      END IF;
+END;
+/
+
+BEGIN
+   EXECUTE IMMEDIATE 'DROP TABLE USERS CASCADE CONSTRAINTS';
+EXCEPTION
+   WHEN OTHERS THEN
+      IF SQLCODE != -942 THEN
+         RAISE;
+      END IF;
+END;
+/
+
+-- Eliminar secuencias si existen
+BEGIN
+   EXECUTE IMMEDIATE 'DROP SEQUENCE PRODUCTO_SEQ';
+EXCEPTION
+   WHEN OTHERS THEN
+      IF SQLCODE != -2289 THEN
+         RAISE;
+      END IF;
+END;
+/
+
+BEGIN
+   EXECUTE IMMEDIATE 'DROP SEQUENCE BODEGA_SEQ';
+EXCEPTION
+   WHEN OTHERS THEN
+      IF SQLCODE != -2289 THEN
+         RAISE;
+      END IF;
+END;
+/
+
+BEGIN
+   EXECUTE IMMEDIATE 'DROP SEQUENCE USER_SEQ';
+EXCEPTION
+   WHEN OTHERS THEN
+      IF SQLCODE != -2289 THEN
+         RAISE;
+      END IF;
+END;
+/
+
+-- =====================================================
+-- CREACIÓN DE SECUENCIAS
+-- =====================================================
+
+-- Secuencia para tabla PRODUCTO
+CREATE SEQUENCE PRODUCTO_SEQ
+    START WITH 1
+    INCREMENT BY 1
+    MINVALUE 1
+    MAXVALUE 9999999999
+    NOCYCLE
+    NOCACHE
+    ORDER;
+
+-- Secuencia para tabla BODEGA
+CREATE SEQUENCE BODEGA_SEQ
+    START WITH 1
+    INCREMENT BY 1
+    MINVALUE 1
+    MAXVALUE 9999999999
+    NOCYCLE
+    NOCACHE
+    ORDER;
+
+-- Secuencia para tabla USERS
+CREATE SEQUENCE USER_SEQ
+    START WITH 1
+    INCREMENT BY 1
+    MINVALUE 1
+    MAXVALUE 9999999999
+    NOCYCLE
+    NOCACHE
+    ORDER;
+
+-- =====================================================
+-- CREACIÓN DE TABLAS
+-- =====================================================
+
+-- Tabla PRODUCTO
+CREATE TABLE PRODUCTO (
+    ID NUMBER(19,0) NOT NULL,
+    CODIGO VARCHAR2(50) NOT NULL,
+    NOMBRE VARCHAR2(200) NOT NULL,
+    DESCRIPCION VARCHAR2(500),
+    PRECIO NUMBER(10,2) NOT NULL,
+    STOCK NUMBER(10,0) NOT NULL,
+    STOCK_MINIMO NUMBER(10,0),
+    CATEGORIA VARCHAR2(100),
+    ACTIVO NUMBER(1,0) DEFAULT 1,
+    FECHA_CREACION TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FECHA_ACTUALIZACION TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT PK_PRODUCTO PRIMARY KEY (ID),
+    CONSTRAINT UK_PRODUCTO_CODIGO UNIQUE (CODIGO),
+    CONSTRAINT CHK_PRODUCTO_PRECIO CHECK (PRECIO >= 0),
+    CONSTRAINT CHK_PRODUCTO_STOCK CHECK (STOCK >= 0),
+    CONSTRAINT CHK_PRODUCTO_STOCK_MIN CHECK (STOCK_MINIMO >= 0),
+    CONSTRAINT CHK_PRODUCTO_ACTIVO CHECK (ACTIVO IN (0, 1))
+);
+
+-- Tabla BODEGA
+CREATE TABLE BODEGA (
+    ID NUMBER(19,0) NOT NULL,
+    CODIGO VARCHAR2(50) NOT NULL,
+    NOMBRE VARCHAR2(200) NOT NULL,
+    DIRECCION VARCHAR2(300),
+    TELEFONO VARCHAR2(20),
+    CAPACIDAD_MAXIMA NUMBER(10,0),
+    ESPACIO_UTILIZADO NUMBER(10,0) DEFAULT 0,
+    ACTIVO NUMBER(1,0) DEFAULT 1,
+    FECHA_CREACION TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FECHA_ACTUALIZACION TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT PK_BODEGA PRIMARY KEY (ID),
+    CONSTRAINT UK_BODEGA_CODIGO UNIQUE (CODIGO),
+    CONSTRAINT CHK_BODEGA_CAPACIDAD CHECK (CAPACIDAD_MAXIMA >= 0),
+    CONSTRAINT CHK_BODEGA_ESPACIO CHECK (ESPACIO_UTILIZADO >= 0),
+    CONSTRAINT CHK_BODEGA_ESPACIO_MAX CHECK (ESPACIO_UTILIZADO <= CAPACIDAD_MAXIMA),
+    CONSTRAINT CHK_BODEGA_ACTIVO CHECK (ACTIVO IN (0, 1))
+);
+
+-- Tabla USERS (para el sistema de usuarios)
+CREATE TABLE USERS (
+    ID NUMBER(19,0) NOT NULL,
+    USERNAME VARCHAR2(100) NOT NULL,
+    EMAIL VARCHAR2(150) NOT NULL,
+    ACTIVE NUMBER(1,0) DEFAULT 1,
+    CONSTRAINT PK_USERS PRIMARY KEY (ID),
+    CONSTRAINT UK_USERS_USERNAME UNIQUE (USERNAME),
+    CONSTRAINT UK_USERS_EMAIL UNIQUE (EMAIL),
+    CONSTRAINT CHK_USERS_ACTIVE CHECK (ACTIVE IN (0, 1))
+);
+
+-- =====================================================
+-- CREACIÓN DE ÍNDICES
+-- =====================================================
+
+-- Índices para tabla PRODUCTO
+CREATE INDEX IDX_PRODUCTO_CATEGORIA ON PRODUCTO(CATEGORIA);
+CREATE INDEX IDX_PRODUCTO_ACTIVO ON PRODUCTO(ACTIVO);
+CREATE INDEX IDX_PRODUCTO_NOMBRE ON PRODUCTO(NOMBRE);
+CREATE INDEX IDX_PRODUCTO_FECHA_CREACION ON PRODUCTO(FECHA_CREACION);
+
+-- Índices para tabla BODEGA
+CREATE INDEX IDX_BODEGA_ACTIVO ON BODEGA(ACTIVO);
+CREATE INDEX IDX_BODEGA_NOMBRE ON BODEGA(NOMBRE);
+CREATE INDEX IDX_BODEGA_FECHA_CREACION ON BODEGA(FECHA_CREACION);
+
+-- Índices para tabla USERS
+CREATE INDEX IDX_USERS_ACTIVE ON USERS(ACTIVE);
+
+-- =====================================================
+-- CREACIÓN DE TRIGGERS
+-- =====================================================
+
+-- Trigger para actualizar FECHA_ACTUALIZACION en PRODUCTO
+CREATE OR REPLACE TRIGGER TRG_PRODUCTO_UPDATE
+BEFORE UPDATE ON PRODUCTO
+FOR EACH ROW
+BEGIN
+    :NEW.FECHA_ACTUALIZACION := CURRENT_TIMESTAMP;
+END;
+/
+
+-- Trigger para actualizar FECHA_ACTUALIZACION en BODEGA
+CREATE OR REPLACE TRIGGER TRG_BODEGA_UPDATE
+BEFORE UPDATE ON BODEGA
+FOR EACH ROW
+BEGIN
+    :NEW.FECHA_ACTUALIZACION := CURRENT_TIMESTAMP;
+END;
+/
+
+-- Trigger para validar espacio utilizado en BODEGA
+CREATE OR REPLACE TRIGGER TRG_BODEGA_ESPACIO_CHECK
+BEFORE INSERT OR UPDATE ON BODEGA
+FOR EACH ROW
+BEGIN
+    IF :NEW.ESPACIO_UTILIZADO IS NULL THEN
+        :NEW.ESPACIO_UTILIZADO := 0;
+    END IF;
+    
+    IF :NEW.CAPACIDAD_MAXIMA IS NOT NULL AND :NEW.ESPACIO_UTILIZADO > :NEW.CAPACIDAD_MAXIMA THEN
+        RAISE_APPLICATION_ERROR(-20001, 'El espacio utilizado no puede superar la capacidad máxima');
+    END IF;
+END;
+/
+
+-- =====================================================
+-- INSERCIÓN DE DATOS DE PRUEBA
+-- =====================================================
+
+-- Insertar usuarios de prueba
+INSERT INTO USERS (ID, USERNAME, EMAIL, ACTIVE) VALUES 
+(USER_SEQ.NEXTVAL, 'admin', 'admin@inventory.com', 1);
+
+INSERT INTO USERS (ID, USERNAME, EMAIL, ACTIVE) VALUES 
+(USER_SEQ.NEXTVAL, 'operador1', 'operador1@inventory.com', 1);
+
+INSERT INTO USERS (ID, USERNAME, EMAIL, ACTIVE) VALUES 
+(USER_SEQ.NEXTVAL, 'supervisor', 'supervisor@inventory.com', 1);
+
+-- Insertar bodegas de prueba
+INSERT INTO BODEGA (ID, CODIGO, NOMBRE, DIRECCION, TELEFONO, CAPACIDAD_MAXIMA, ESPACIO_UTILIZADO, ACTIVO) VALUES 
+(BODEGA_SEQ.NEXTVAL, 'BOD001', 'Bodega Principal', 'Av. Principal 123, Santiago', '+56912345678', 10000, 3500, 1);
+
+INSERT INTO BODEGA (ID, CODIGO, NOMBRE, DIRECCION, TELEFONO, CAPACIDAD_MAXIMA, ESPACIO_UTILIZADO, ACTIVO) VALUES 
+(BODEGA_SEQ.NEXTVAL, 'BOD002', 'Bodega Norte', 'Calle Norte 456, Santiago', '+56987654321', 5000, 1200, 1);
+
+INSERT INTO BODEGA (ID, CODIGO, NOMBRE, DIRECCION, TELEFONO, CAPACIDAD_MAXIMA, ESPACIO_UTILIZADO, ACTIVO) VALUES 
+(BODEGA_SEQ.NEXTVAL, 'BOD003', 'Bodega Sur', 'Av. Sur 789, Santiago', '+56911223344', 7500, 2000, 1);
+
+-- Insertar productos de prueba
+INSERT INTO PRODUCTO (ID, CODIGO, NOMBRE, DESCRIPCION, PRECIO, STOCK, STOCK_MINIMO, CATEGORIA, ACTIVO) VALUES 
+(PRODUCTO_SEQ.NEXTVAL, 'PROD001', 'Laptop Dell Inspiron', 'Laptop Dell Inspiron 15, Intel Core i5, 8GB RAM, 512GB SSD', 599990.00, 25, 5, 'Computación', 1);
+
+INSERT INTO PRODUCTO (ID, CODIGO, NOMBRE, DESCRIPCION, PRECIO, STOCK, STOCK_MINIMO, CATEGORIA, ACTIVO) VALUES 
+(PRODUCTO_SEQ.NEXTVAL, 'PROD002', 'Mouse Logitech MX Master', 'Mouse inalámbrico profesional con tecnología Darkfield', 89990.00, 50, 10, 'Accesorios', 1);
+
+INSERT INTO PRODUCTO (ID, CODIGO, NOMBRE, DESCRIPCION, PRECIO, STOCK, STOCK_MINIMO, CATEGORIA, ACTIVO) VALUES 
+(PRODUCTO_SEQ.NEXTVAL, 'PROD003', 'Teclado Mecánico Keychron', 'Teclado mecánico 60% con switches red', 79990.00, 30, 8, 'Accesorios', 1);
+
+INSERT INTO PRODUCTO (ID, CODIGO, NOMBRE, DESCRIPCION, PRECIO, STOCK, STOCK_MINIMO, CATEGORIA, ACTIVO) VALUES 
+(PRODUCTO_SEQ.NEXTVAL, 'PROD004', 'Monitor Samsung 27"', 'Monitor Full HD 27 pulgadas, 75Hz, IPS', 249990.00, 15, 3, 'Monitores', 1);
+
+INSERT INTO PRODUCTO (ID, CODIGO, NOMBRE, DESCRIPCION, PRECIO, STOCK, STOCK_MINIMO, CATEGORIA, ACTIVO) VALUES 
+(PRODUCTO_SEQ.NEXTVAL, 'PROD005', 'Webcam Logitech C920', 'Webcam HD 1080p con micrófono integrado', 69990.00, 40, 10, 'Accesorios', 1);
+
+INSERT INTO PRODUCTO (ID, CODIGO, NOMBRE, DESCRIPCION, PRECIO, STOCK, STOCK_MINIMO, CATEGORIA, ACTIVO) VALUES 
+(PRODUCTO_SEQ.NEXTVAL, 'PROD006', 'Impresora HP LaserJet', 'Impresora láser monocromática, WiFi', 199990.00, 10, 2, 'Impresoras', 1);
+
+INSERT INTO PRODUCTO (ID, CODIGO, NOMBRE, DESCRIPCION, PRECIO, STOCK, STOCK_MINIMO, CATEGORIA, ACTIVO) VALUES 
+(PRODUCTO_SEQ.NEXTVAL, 'PROD007', 'Router WiFi 6 Asus', 'Router WiFi 6 AX3000, doble banda', 149990.00, 20, 5, 'Networking', 1);
+
+INSERT INTO PRODUCTO (ID, CODIGO, NOMBRE, DESCRIPCION, PRECIO, STOCK, STOCK_MINIMO, CATEGORIA, ACTIVO) VALUES 
+(PRODUCTO_SEQ.NEXTVAL, 'PROD008', 'SSD Samsung 1TB', 'Disco SSD NVMe M.2 1TB, 3500MB/s', 89990.00, 35, 10, 'Almacenamiento', 1);
+
+INSERT INTO PRODUCTO (ID, CODIGO, NOMBRE, DESCRIPCION, PRECIO, STOCK, STOCK_MINIMO, CATEGORIA, ACTIVO) VALUES 
+(PRODUCTO_SEQ.NEXTVAL, 'PROD009', 'Memoria RAM 16GB DDR4', 'Kit 2x8GB DDR4 3200MHz', 59990.00, 45, 15, 'Componentes', 1);
+
+INSERT INTO PRODUCTO (ID, CODIGO, NOMBRE, DESCRIPCION, PRECIO, STOCK, STOCK_MINIMO, CATEGORIA, ACTIVO) VALUES 
+(PRODUCTO_SEQ.NEXTVAL, 'PROD010', 'Audífonos Sony WH-1000XM4', 'Audífonos inalámbricos con cancelación de ruido', 299990.00, 12, 3, 'Audio', 1);
+
+-- =====================================================
+-- COMMIT DE TRANSACCIONES
+-- =====================================================
+COMMIT;
+
+-- =====================================================
+-- CREACIÓN DE VISTAS
+-- =====================================================
+
+-- Vista de productos con bajo stock
+CREATE OR REPLACE VIEW V_PRODUCTOS_BAJO_STOCK AS
+SELECT 
+    P.ID,
+    P.CODIGO,
+    P.NOMBRE,
+    P.STOCK,
+    P.STOCK_MINIMO,
+    P.CATEGORIA,
+    CASE 
+        WHEN P.STOCK = 0 THEN 'SIN STOCK'
+        WHEN P.STOCK < P.STOCK_MINIMO THEN 'STOCK CRÍTICO'
+        ELSE 'STOCK BAJO'
+    END AS ESTADO_STOCK
+FROM PRODUCTO P
+WHERE P.ACTIVO = 1 
+    AND P.STOCK <= P.STOCK_MINIMO
+ORDER BY P.STOCK ASC;
+
+-- Vista de utilización de bodegas
+CREATE OR REPLACE VIEW V_UTILIZACION_BODEGAS AS
+SELECT 
+    B.ID,
+    B.CODIGO,
+    B.NOMBRE,
+    B.CAPACIDAD_MAXIMA,
+    B.ESPACIO_UTILIZADO,
+    ROUND((B.ESPACIO_UTILIZADO * 100.0 / B.CAPACIDAD_MAXIMA), 2) AS PORCENTAJE_UTILIZACION,
+    (B.CAPACIDAD_MAXIMA - B.ESPACIO_UTILIZADO) AS ESPACIO_DISPONIBLE
+FROM BODEGA B
+WHERE B.ACTIVO = 1
+ORDER BY PORCENTAJE_UTILIZACION DESC;
+
+-- Vista de resumen de inventario por categoría
+CREATE OR REPLACE VIEW V_RESUMEN_INVENTARIO AS
+SELECT 
+    P.CATEGORIA,
+    COUNT(*) AS TOTAL_PRODUCTOS,
+    SUM(P.STOCK) AS STOCK_TOTAL,
+    SUM(P.PRECIO * P.STOCK) AS VALOR_INVENTARIO,
+    AVG(P.PRECIO) AS PRECIO_PROMEDIO,
+    MIN(P.PRECIO) AS PRECIO_MINIMO,
+    MAX(P.PRECIO) AS PRECIO_MAXIMO
+FROM PRODUCTO P
+WHERE P.ACTIVO = 1
+GROUP BY P.CATEGORIA
+ORDER BY VALOR_INVENTARIO DESC;
+
+-- =====================================================
+-- CREACIÓN DE PROCEDIMIENTOS ALMACENADOS
+-- =====================================================
+
+-- Procedimiento para crear producto con validaciones
+CREATE OR REPLACE PROCEDURE SP_CREAR_PRODUCTO(
+    p_codigo IN VARCHAR2,
+    p_nombre IN VARCHAR2,
+    p_descripcion IN VARCHAR2,
+    p_precio IN NUMBER,
+    p_stock IN NUMBER,
+    p_stock_minimo IN NUMBER,
+    p_categoria IN VARCHAR2,
+    p_id_producto OUT NUMBER
+) AS
+    v_count NUMBER;
+BEGIN
+    -- Validar que el código no exista
+    SELECT COUNT(*) INTO v_count 
+    FROM PRODUCTO 
+    WHERE CODIGO = p_codigo;
+    
+    IF v_count > 0 THEN
+        RAISE_APPLICATION_ERROR(-20002, 'El código de producto ya existe');
+    END IF;
+    
+    -- Insertar el producto
+    INSERT INTO PRODUCTO (
+        ID, CODIGO, NOMBRE, DESCRIPCION, PRECIO, 
+        STOCK, STOCK_MINIMO, CATEGORIA, ACTIVO
+    ) VALUES (
+        PRODUCTO_SEQ.NEXTVAL, p_codigo, p_nombre, p_descripcion, 
+        p_precio, p_stock, p_stock_minimo, p_categoria, 1
+    ) RETURNING ID INTO p_id_producto;
+    
+    COMMIT;
+    
+    DBMS_OUTPUT.PUT_LINE('Producto creado exitosamente con ID: ' || p_id_producto);
+    
+EXCEPTION
+    WHEN OTHERS THEN
+        ROLLBACK;
+        RAISE;
+END SP_CREAR_PRODUCTO;
+/
+
+-- Procedimiento para actualizar stock
+CREATE OR REPLACE PROCEDURE SP_ACTUALIZAR_STOCK(
+    p_codigo_producto IN VARCHAR2,
+    p_cantidad IN NUMBER,
+    p_operacion IN VARCHAR2 -- 'ENTRADA' o 'SALIDA'
+) AS
+    v_stock_actual NUMBER;
+    v_id_producto NUMBER;
+BEGIN
+    -- Obtener el stock actual
+    SELECT ID, STOCK INTO v_id_producto, v_stock_actual
+    FROM PRODUCTO
+    WHERE CODIGO = p_codigo_producto
+    AND ACTIVO = 1
+    FOR UPDATE;
+    
+    -- Actualizar según la operación
+    IF p_operacion = 'ENTRADA' THEN
+        UPDATE PRODUCTO
+        SET STOCK = STOCK + p_cantidad
+        WHERE ID = v_id_producto;
+        
+    ELSIF p_operacion = 'SALIDA' THEN
+        IF v_stock_actual < p_cantidad THEN
+            RAISE_APPLICATION_ERROR(-20003, 'Stock insuficiente. Stock actual: ' || v_stock_actual);
+        END IF;
+        
+        UPDATE PRODUCTO
+        SET STOCK = STOCK - p_cantidad
+        WHERE ID = v_id_producto;
+    ELSE
+        RAISE_APPLICATION_ERROR(-20004, 'Operación inválida. Use ENTRADA o SALIDA');
+    END IF;
+    
+    COMMIT;
+    
+    DBMS_OUTPUT.PUT_LINE('Stock actualizado exitosamente');
+    
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RAISE_APPLICATION_ERROR(-20005, 'Producto no encontrado o inactivo');
+    WHEN OTHERS THEN
+        ROLLBACK;
+        RAISE;
+END SP_ACTUALIZAR_STOCK;
+/
+
+-- =====================================================
+-- CREACIÓN DE FUNCIONES
+-- =====================================================
+
+-- Función para calcular el valor total del inventario
+CREATE OR REPLACE FUNCTION FN_VALOR_TOTAL_INVENTARIO
+RETURN NUMBER
+AS
+    v_total NUMBER;
+BEGIN
+    SELECT NVL(SUM(PRECIO * STOCK), 0)
+    INTO v_total
+    FROM PRODUCTO
+    WHERE ACTIVO = 1;
+    
+    RETURN v_total;
+END FN_VALOR_TOTAL_INVENTARIO;
+/
+
+-- Función para verificar disponibilidad de espacio en bodega
+CREATE OR REPLACE FUNCTION FN_VERIFICAR_ESPACIO_BODEGA(
+    p_codigo_bodega VARCHAR2,
+    p_espacio_requerido NUMBER
+) RETURN VARCHAR2
+AS
+    v_capacidad_maxima NUMBER;
+    v_espacio_utilizado NUMBER;
+    v_espacio_disponible NUMBER;
+BEGIN
+    SELECT CAPACIDAD_MAXIMA, ESPACIO_UTILIZADO
+    INTO v_capacidad_maxima, v_espacio_utilizado
+    FROM BODEGA
+    WHERE CODIGO = p_codigo_bodega
+    AND ACTIVO = 1;
+    
+    v_espacio_disponible := v_capacidad_maxima - v_espacio_utilizado;
+    
+    IF v_espacio_disponible >= p_espacio_requerido THEN
+        RETURN 'DISPONIBLE';
+    ELSE
+        RETURN 'NO_DISPONIBLE';
+    END IF;
+    
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RETURN 'BODEGA_NO_ENCONTRADA';
+END FN_VERIFICAR_ESPACIO_BODEGA;
+/
+
+-- =====================================================
+-- PERMISOS Y SINÓNIMOS (Ajustar según usuarios)
+-- =====================================================
+
+-- Crear rol para la aplicación
+-- CREATE ROLE APP_INVENTORY_ROLE;
+
+-- Otorgar permisos al rol
+-- GRANT SELECT, INSERT, UPDATE, DELETE ON PRODUCTO TO APP_INVENTORY_ROLE;
+-- GRANT SELECT, INSERT, UPDATE, DELETE ON BODEGA TO APP_INVENTORY_ROLE;
+-- GRANT SELECT, INSERT, UPDATE, DELETE ON USERS TO APP_INVENTORY_ROLE;
+-- GRANT SELECT ON PRODUCTO_SEQ TO APP_INVENTORY_ROLE;
+-- GRANT SELECT ON BODEGA_SEQ TO APP_INVENTORY_ROLE;
+-- GRANT SELECT ON USER_SEQ TO APP_INVENTORY_ROLE;
+-- GRANT EXECUTE ON SP_CREAR_PRODUCTO TO APP_INVENTORY_ROLE;
+-- GRANT EXECUTE ON SP_ACTUALIZAR_STOCK TO APP_INVENTORY_ROLE;
+-- GRANT EXECUTE ON FN_VALOR_TOTAL_INVENTARIO TO APP_INVENTORY_ROLE;
+-- GRANT EXECUTE ON FN_VERIFICAR_ESPACIO_BODEGA TO APP_INVENTORY_ROLE;
+
+-- Asignar rol al usuario de la aplicación (ajustar nombre de usuario)
+-- GRANT APP_INVENTORY_ROLE TO INVENTORY_APP_USER;
+
+-- =====================================================
+-- VERIFICACIÓN FINAL
+-- =====================================================
+
+-- Verificar tablas creadas
+SELECT table_name, num_rows 
+FROM user_tables 
+WHERE table_name IN ('PRODUCTO', 'BODEGA', 'USERS')
+ORDER BY table_name;
+
+-- Verificar secuencias
+SELECT sequence_name, last_number 
+FROM user_sequences
+WHERE sequence_name IN ('PRODUCTO_SEQ', 'BODEGA_SEQ', 'USER_SEQ')
+ORDER BY sequence_name;
+
+-- Verificar datos insertados
+SELECT 'PRODUCTOS' AS TABLA, COUNT(*) AS TOTAL FROM PRODUCTO
+UNION ALL
+SELECT 'BODEGAS', COUNT(*) FROM BODEGA
+UNION ALL
+SELECT 'USUARIOS', COUNT(*) FROM USERS;
+
+-- Mensaje final
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('==============================================');
+    DBMS_OUTPUT.PUT_LINE('SCRIPT EJECUTADO EXITOSAMENTE');
+    DBMS_OUTPUT.PUT_LINE('==============================================');
+    DBMS_OUTPUT.PUT_LINE('Tablas creadas: PRODUCTO, BODEGA, USERS');
+    DBMS_OUTPUT.PUT_LINE('Secuencias creadas: PRODUCTO_SEQ, BODEGA_SEQ, USER_SEQ');
+    DBMS_OUTPUT.PUT_LINE('Triggers creados: TRG_PRODUCTO_UPDATE, TRG_BODEGA_UPDATE, TRG_BODEGA_ESPACIO_CHECK');
+    DBMS_OUTPUT.PUT_LINE('Vistas creadas: V_PRODUCTOS_BAJO_STOCK, V_UTILIZACION_BODEGAS, V_RESUMEN_INVENTARIO');
+    DBMS_OUTPUT.PUT_LINE('Procedimientos: SP_CREAR_PRODUCTO, SP_ACTUALIZAR_STOCK');
+    DBMS_OUTPUT.PUT_LINE('Funciones: FN_VALOR_TOTAL_INVENTARIO, FN_VERIFICAR_ESPACIO_BODEGA');
+    DBMS_OUTPUT.PUT_LINE('Datos de prueba insertados correctamente');
+    DBMS_OUTPUT.PUT_LINE('==============================================');
+END;
+/
