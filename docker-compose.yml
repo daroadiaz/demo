@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  spring-bff:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: spring-bff-service
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: 8080
+      SPRING_DATASOURCE_URL: jdbc:oracle:thin:@(description=(retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=adb.sa-santiago-1.oraclecloud.com))(connect_data=(service_name=g8fd1371297d3dc_bdduoc_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)(my_wallet_directory=/app/wallet)))
+      SPRING_DATASOURCE_USERNAME: ADMIN
+      SPRING_DATASOURCE_PASSWORD: Pass1163Meth
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: "true"
+      SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: 1
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: 5
+      SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT: 120000
+      SERVERLESS_FUNCTION_URL: http://host.docker.internal:8081
+      JAVA_OPTS: "-Xms512m -Xmx1024m"
+    volumes:
+      - ./src/main/resources/wallet:/app/wallet:ro
+      - spring-logs:/app/logs
+    networks:
+      - inventory-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/test-connection"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  inventory-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  spring-logs:
+    driver: local
