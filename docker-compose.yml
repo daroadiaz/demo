@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   spring-bff:
     build:
@@ -19,7 +17,7 @@ services:
       SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: 1
       SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: 5
       SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT: 120000
-      SERVERLESS_FUNCTION_URL: http://host.docker.internal:8081
+      SERVERLESS_FUNCTION_URL: http://172.31.16.179:8081
       JAVA_OPTS: "-Xms512m -Xmx1024m"
     volumes:
       - ./src/main/resources/wallet:/app/wallet:ro
@@ -33,8 +31,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     logging:
       driver: json-file
       options:
