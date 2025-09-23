@@ -13,10 +13,10 @@ import java.util.Arrays;
 public class ServerlessClient {
     
     private final RestTemplate restTemplate = new RestTemplate();
-    private String serverlessUrl = "http://localhost:8081";
+    private String serverlessUrl = "http://localhost:7072/api";
     
     public ProductoDTO crearProducto(ProductoDTO producto) throws RestClientException {
-        String url = serverlessUrl + "/function/producto/create";
+        String url = serverlessUrl + "/productos";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<ProductoDTO> request = new HttpEntity<>(producto, headers);
@@ -25,7 +25,7 @@ public class ServerlessClient {
     }
     
     public ProductoDTO actualizarProducto(Long id, ProductoDTO producto) throws RestClientException {
-        String url = serverlessUrl + "/function/producto/update/" + id;
+        String url = serverlessUrl + "/productos/" + id;
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<ProductoDTO> request = new HttpEntity<>(producto, headers);
@@ -34,24 +34,24 @@ public class ServerlessClient {
     }
     
     public void eliminarProducto(Long id) throws RestClientException {
-        String url = serverlessUrl + "/function/producto/delete/" + id;
+        String url = serverlessUrl + "/productos/" + id;
         restTemplate.delete(url);
     }
     
     public ProductoDTO obtenerProducto(Long id) throws RestClientException {
-        String url = serverlessUrl + "/function/producto/" + id;
+        String url = serverlessUrl + "/productos/" + id;
         ResponseEntity<ProductoDTO> response = restTemplate.getForEntity(url, ProductoDTO.class);
         return response.getBody();
     }
     
     public List<ProductoDTO> listarProductos() throws RestClientException {
-        String url = serverlessUrl + "/function/producto/list";
+        String url = serverlessUrl + "/productos";
         ResponseEntity<ProductoDTO[]> response = restTemplate.getForEntity(url, ProductoDTO[].class);
         return Arrays.asList(response.getBody());
     }
     
     public BodegaDTO crearBodega(BodegaDTO bodega) throws RestClientException {
-        String url = serverlessUrl + "/function/bodega/create";
+        String url = serverlessUrl + "/bodegas";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<BodegaDTO> request = new HttpEntity<>(bodega, headers);
@@ -60,7 +60,7 @@ public class ServerlessClient {
     }
     
     public BodegaDTO actualizarBodega(Long id, BodegaDTO bodega) throws RestClientException {
-        String url = serverlessUrl + "/function/bodega/update/" + id;
+        String url = serverlessUrl + "/bodegas/" + id;
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<BodegaDTO> request = new HttpEntity<>(bodega, headers);
@@ -69,18 +69,18 @@ public class ServerlessClient {
     }
     
     public void eliminarBodega(Long id) throws RestClientException {
-        String url = serverlessUrl + "/function/bodega/delete/" + id;
+        String url = serverlessUrl + "/bodegas/" + id;
         restTemplate.delete(url);
     }
     
     public BodegaDTO obtenerBodega(Long id) throws RestClientException {
-        String url = serverlessUrl + "/function/bodega/" + id;
+        String url = serverlessUrl + "/bodegas/" + id;
         ResponseEntity<BodegaDTO> response = restTemplate.getForEntity(url, BodegaDTO.class);
         return response.getBody();
     }
     
     public List<BodegaDTO> listarBodegas() throws RestClientException {
-        String url = serverlessUrl + "/function/bodega/list";
+        String url = serverlessUrl + "/bodegas";
         ResponseEntity<BodegaDTO[]> response = restTemplate.getForEntity(url, BodegaDTO[].class);
         return Arrays.asList(response.getBody());
     }
