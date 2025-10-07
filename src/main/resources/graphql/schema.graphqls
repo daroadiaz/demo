@@ -1,0 +1,68 @@
+scalar Long
+scalar BigDecimal
+scalar LocalDateTime
+
+type Producto {
+    id: Long
+    codigo: String!
+    nombre: String!
+    descripcion: String
+    precio: BigDecimal!
+    stock: Int!
+    stockMinimo: Int
+    categoria: String
+    activo: Boolean
+    fechaCreacion: LocalDateTime
+    fechaActualizacion: LocalDateTime
+}
+
+type Bodega {
+    id: Long
+    codigo: String!
+    nombre: String!
+    direccion: String
+    telefono: String
+    capacidadMaxima: Int
+    espacioUtilizado: Int
+    activo: Boolean
+    fechaCreacion: LocalDateTime
+    fechaActualizacion: LocalDateTime
+}
+
+input ProductoInput {
+    codigo: String!
+    nombre: String!
+    descripcion: String
+    precio: BigDecimal!
+    stock: Int!
+    stockMinimo: Int
+    categoria: String
+    activo: Boolean
+}
+
+input BodegaInput {
+    codigo: String!
+    nombre: String!
+    direccion: String
+    telefono: String
+    capacidadMaxima: Int
+    espacioUtilizado: Int
+    activo: Boolean
+}
+
+type Query {
+    productos: [Producto]
+    producto(id: Long!): Producto
+    bodegas: [Bodega]
+    bodega(id: Long!): Bodega
+}
+
+type Mutation {
+    crearProducto(input: ProductoInput!): Producto
+    actualizarProducto(id: Long!, input: ProductoInput!): Producto
+    eliminarProducto(id: Long!): Boolean
+
+    crearBodega(input: BodegaInput!): Bodega
+    actualizarBodega(id: Long!, input: BodegaInput!): Bodega
+    eliminarBodega(id: Long!): Boolean
+}

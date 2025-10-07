@@ -1,123 +1,82 @@
 package com.example.demo.service;
 
-import com.example.demo.client.ServerlessClient;
 import com.example.demo.dto.ProductoDTO;
 import com.example.demo.dto.BodegaDTO;
+import com.example.demo.event.EventType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.List;
 
 @Service
 public class OrchestratorService {
-    
+
     private static final Logger logger = LoggerFactory.getLogger(OrchestratorService.class);
-    
+
     @Autowired
-    private ServerlessClient serverlessClient;
-    
+    private EventGridPublisher eventGridPublisher;
+
     @Autowired
-    private LocalServerlessService localService;
+    private QueryService queryService;
     
     public ProductoDTO crearProducto(ProductoDTO producto) {
-        try {
-            logger.info("Intentando crear producto via serverless function");
-            return serverlessClient.crearProducto(producto);
-        } catch (RestClientException e) {
-            logger.warn("Serverless function no disponible, usando servicio local. Error: {}", e.getMessage());
-            return localService.crearProducto(producto);
-        }
+        logger.info("Publicando evento ProductoCreado para: {}", producto.getCodigo());
+        eventGridPublisher.publishProductoEvent(EventType.PRODUCTO_CREADO, producto);
+        return producto;
     }
     
     public ProductoDTO actualizarProducto(Long id, ProductoDTO producto) {
-        try {
-            logger.info("Intentando actualizar producto via serverless function");
-            return serverlessClient.actualizarProducto(id, producto);
-        } catch (RestClientException e) {
-            logger.warn("Serverless function no disponible, usando servicio local. Error: {}", e.getMessage());
-            return localService.actualizarProducto(id, producto);
-        }
+        logger.info("Publicando evento ProductoActualizado para ID: {}", id);
+        producto.setId(id);
+        eventGridPublisher.publishProductoEvent(EventType.PRODUCTO_ACTUALIZADO, producto);
+        return producto;
     }
     
     public void eliminarProducto(Long id) {
-        try {
-            logger.info("Intentando eliminar producto via serverless function");
-            serverlessClient.eliminarProducto(id);
-        } catch (RestClientException e) {
-            logger.warn("Serverless function no disponible, usando servicio local. Error: {}", e.getMessage());
-            localService.eliminarProducto(id);
-        }
+        logger.info("Publicando evento ProductoEliminado para ID: {}", id);
+        ProductoDTO producto = new ProductoDTO();
+        producto.setId(id);
+        eventGridPublisher.publishProductoEvent(EventType.PRODUCTO_ELIMINADO, producto);
     }
     
     public ProductoDTO obtenerProducto(Long id) {
-        try {
-            logger.info("Intentando obtener producto via serverless function");
-            return serverlessClient.obtenerProducto(id);
-        } catch (RestClientException e) {
-            logger.warn("Serverless function no disponible, usando servicio local. Error: {}", e.getMessage());
-            return localService.obtenerProducto(id);
-        }
+        logger.info("Consultando producto con ID: {}", id);
+        return queryService.obtenerProducto(id);
     }
-    
+
     public List<ProductoDTO> listarProductos() {
-        try {
-            logger.info("Intentando listar productos via serverless function");
-            return serverlessClient.listarProductos();
-        } catch (RestClientException e) {
-            logger.warn("Serverless function no disponible, usando servicio local. Error: {}", e.getMessage());
-            return localService.listarProductos();
-        }
+        logger.info("Listando todos los productos");
+        return queryService.listarProductos();
     }
     
     public BodegaDTO crearBodega(BodegaDTO bodega) {
-        try {
-            logger.info("Intentando crear bodega via serverless function");
-            return serverlessClient.crearBodega(bodega);
-        } catch (RestClientException e) {
-            logger.warn("Serverless function no disponible, usando servicio local. Error: {}", e.getMessage());
-            return localService.crearBodega(bodega);
-        }
+        logger.info("Publicando evento BodegaCreada para: {}", bodega.getCodigo());
+        eventGridPublisher.publishBodegaEvent(EventType.BODEGA_CREADA, bodega);
+        return bodega;
     }
-    
+
     public BodegaDTO actualizarBodega(Long id, BodegaDTO bodega) {
-        try {
-            logger.info("Intentando actualizar bodega via serverless function");
-            return serverlessClient.actualizarBodega(id, bodega);
-        } catch (RestClientException e) {
-            logger.warn("Serverless function no disponible, usando servicio local. Error: {}", e.getMessage());
-            return localService.actualizarBodega(id, bodega);
-        }
+        logger.info("Publicando evento BodegaActualizada para ID: {}", id);
+        bodega.setId(id);
+        eventGridPublisher.publishBodegaEvent(EventType.BODEGA_ACTUALIZADA, bodega);
+        return bodega;
     }
-    
+
     public void eliminarBodega(Long id) {
-        try {
-            logger.info("Intentando eliminar bodega via serverless function");
-            serverlessClient.eliminarBodega(id);
-        } catch (RestClientException e) {
-            logger.warn("Serverless function no disponible, usando servicio local. Error: {}", e.getMessage());
-            localService.eliminarBodega(id);
-        }
+        logger.info("Publicando evento BodegaEliminada para ID: {}", id);
+        BodegaDTO bodega = new BodegaDTO();
+        bodega.setId(id);
+        eventGridPublisher.publishBodegaEvent(EventType.BODEGA_ELIMINADA, bodega);
     }
-    
+
     public BodegaDTO obtenerBodega(Long id) {
-        try {
-            logger.info("Intentando obtener bodega via serverless function");
-            return serverlessClient.obtenerBodega(id);
-        } catch (RestClientException e) {
-            logger.warn("Serverless function no disponible, usando servicio local. Error: {}", e.getMessage());
-            return localService.obtenerBodega(id);
-        }
+        logger.info("Consultando bodega con ID: {}", id);
+        return queryService.obtenerBodega(id);
     }
-    
+
     public List<BodegaDTO> listarBodegas() {
-        try {
-            logger.info("Intentando listar bodegas via serverless function");
-            return serverlessClient.listarBodegas();
-        } catch (RestClientException e) {
-            logger.warn("Serverless function no disponible, usando servicio local. Error: {}", e.getMessage());
-            return localService.listarBodegas();
-        }
+        logger.info("Listando todas las bodegas");
+        return queryService.listarBodegas();
     }
 }
